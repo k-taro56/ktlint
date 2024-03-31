@@ -3,8 +3,10 @@ package com.pinterest.ktlint.rule.engine.api
 import com.pinterest.ktlint.rule.engine.core.api.RuleId
 import com.pinterest.ktlint.rule.engine.core.api.isWhiteSpace
 import com.pinterest.ktlint.rule.engine.internal.RuleExecutionContext
+import com.pinterest.ktlint.rule.engine.internal.findSuppressionTargetNodeFinder
 import com.pinterest.ktlint.rule.engine.internal.insertKtlintRuleSuppression
 import org.jetbrains.kotlin.com.intellij.lang.ASTNode
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 
 /**
  * A [Suppress] annotation can only be inserted at specific locations. This function is intended for API Consumers. It updates given [code]
@@ -39,13 +41,14 @@ private fun ASTNode.findLeafElementAt(suppression: KtlintSuppression): ASTNode =
 
         is KtlintSuppressionAtOffset ->
             findLeafElementAt(suppression.offsetFromStartOf(text))
-                ?.let {
-                    if (it.isWhiteSpace()) {
-                        // A suppression can not be added at a whitespace element. Insert it at the parent instead
-                        it.treeParent
-                    } else {
-                        it
-                    }
+                ?.let { leafElement ->
+                    leafElement
+                        .applyIf(leafElement.isWhiteSpace()) {
+                            // A suppression can not be added at a whitespace element. Insert it at the parent instead
+                            leafElement.treeParent
+                        }
+                }?.let { leafElement ->
+                    suppression.findSuppressionTargetNodeFinder().findSuppressionTargetNode(leafElement)
                 }
                 ?: throw KtlintSuppressionNoElementFoundException(suppression)
     }

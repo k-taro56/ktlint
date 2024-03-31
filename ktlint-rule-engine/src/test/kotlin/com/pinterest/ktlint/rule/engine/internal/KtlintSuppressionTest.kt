@@ -9,7 +9,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
-class KtlintSuppressionKtTest {
+class KtlintSuppressionTest {
     @Nested
     inner class `Given a file suppression to be inserted` {
         @Test

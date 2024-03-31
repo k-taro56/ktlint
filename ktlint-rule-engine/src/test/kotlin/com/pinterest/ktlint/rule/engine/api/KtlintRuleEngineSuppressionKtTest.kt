@@ -3,9 +3,12 @@ package com.pinterest.ktlint.rule.engine.api
 import com.pinterest.ktlint.rule.engine.core.api.Rule
 import com.pinterest.ktlint.rule.engine.core.api.RuleId
 import com.pinterest.ktlint.rule.engine.core.api.RuleProvider
+import com.pinterest.ktlint.ruleset.standard.rules.CLASS_SIGNATURE_RULE_ID
 import com.pinterest.ktlint.ruleset.standard.rules.CONDITION_WRAPPING_RULE_ID
+import com.pinterest.ktlint.ruleset.standard.rules.FUNCTION_SIGNATURE_RULE_ID
 import com.pinterest.ktlint.ruleset.standard.rules.NO_CONSECUTIVE_BLANK_LINES_RULE_ID
 import com.pinterest.ktlint.ruleset.standard.rules.NO_LINE_BREAK_BEFORE_ASSIGNMENT_RULE_ID
+import com.pinterest.ktlint.ruleset.standard.rules.PARAMETER_LIST_WRAPPING_RULE_ID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -360,6 +363,85 @@ class KtlintRuleEngineSuppressionKtTest {
 
             assertThat(actual).isEqualTo(formattedCode)
         }
+    }
+
+    @Test
+    fun `Issue 2588 - Given a class-signature violation then add the suppression at the class`() {
+        val code =
+            """
+            class FooBar : Foo, Bar {
+                // some body
+            }
+            """.trimIndent()
+        val formattedCode =
+            """
+            @Suppress("ktlint:standard:class-signature")
+            class FooBar : Foo, Bar {
+                // some body
+            }
+            """.trimIndent()
+        val actual =
+            ktLintRuleEngine
+                .insertSuppression(
+                    Code.fromSnippet(code, false),
+                    KtlintSuppressionAtOffset(1, 16, CLASS_SIGNATURE_RULE_ID),
+                )
+
+        assertThat(actual).isEqualTo(formattedCode)
+    }
+
+    @Test
+    fun `Issue 2588 - Given a function-signature violation then add the suppression at the function`() {
+        val code =
+            """
+            fun foo(
+               row1: Int, col1: Int,
+               row2: Int, col2: Int,
+            ) = "foo"
+            """.trimIndent()
+        val formattedCode =
+            """
+            @Suppress("ktlint:standard:function-signature")
+            fun foo(
+               row1: Int, col1: Int,
+               row2: Int, col2: Int,
+            ) = "foo"
+            """.trimIndent()
+        val actual =
+            ktLintRuleEngine
+                .insertSuppression(
+                    Code.fromSnippet(code, false),
+                    KtlintSuppressionAtOffset(2, 15, FUNCTION_SIGNATURE_RULE_ID),
+                )
+
+        assertThat(actual).isEqualTo(formattedCode)
+    }
+
+    @Test
+    fun `Issue 2588 - Given a parameter-list-wrapping violation then add the suppression at the function`() {
+        val code =
+            """
+            fun foo(
+               row1: Int, col1: Int,
+               row2: Int, col2: Int,
+            ) = "foo"
+            """.trimIndent()
+        val formattedCode =
+            """
+            @Suppress("ktlint:standard:parameter-list-wrapping")
+            fun foo(
+               row1: Int, col1: Int,
+               row2: Int, col2: Int,
+            ) = "foo"
+            """.trimIndent()
+        val actual =
+            ktLintRuleEngine
+                .insertSuppression(
+                    Code.fromSnippet(code, false),
+                    KtlintSuppressionAtOffset(2, 15, PARAMETER_LIST_WRAPPING_RULE_ID),
+                )
+
+        assertThat(actual).isEqualTo(formattedCode)
     }
 
     private companion object {
